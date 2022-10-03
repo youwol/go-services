@@ -9,7 +9,8 @@ import (
 	"strings"
 	"time"
 
-	minio "github.com/minio/minio-go"
+	minio "github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/patrickmn/go-cache"
 	authz "gitlab.com/youwol/platform/libs/go-libs/middleware"
 	utils "gitlab.com/youwol/platform/libs/go-libs/utils"
@@ -19,6 +20,8 @@ import (
 var endpoint = os.Getenv("MINIO_HOST_PORT")
 var accessKeyID = os.Getenv("MINIO_ACCESS_KEY")
 var secretAccessKey = os.Getenv("MINIO_ACCESS_SECRET")
+var region = os.Getenv("MINIO_REGION")
+var _, secure = os.LookupEnv("MINIO_SECURE")
 var c = cache.New(10*time.Minute, 10*time.Minute+1*time.Second)
 var minioClientKey = "minio_client_" + os.Getenv("ENVIRONMENT")
 
@@ -44,7 +47,12 @@ func getMinioClient(ctx context.Context) (*minio.Client, error) {
 	var err error
 	client, found := c.Get(minioClientKey)
 	if !found {
-		client, err = minio.New(endpoint, accessKeyID, secretAccessKey, false)
+		opts := minio.Options{
+			Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+			Region: region,
+			Secure: secure,
+		}
+		client, err = minio.New(endpoint, &opts)
 		logger := utils.ContextLogger(ctx)
 		if err == nil {
 			logger.Info("Minio client initialized", zap.String("URL", endpoint))

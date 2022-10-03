@@ -1,13 +1,15 @@
 package healthchecks
 
 import (
+	"context"
 	"fmt"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"os"
 	"time"
 
 	health "github.com/AppsFlyer/go-sundheit"
 	"github.com/AppsFlyer/go-sundheit/checks"
-	"github.com/minio/minio-go"
+	"github.com/minio/minio-go/v7"
 	"gitlab.com/youwol/platform/libs/go-libs/utils"
 	"go.uber.org/zap"
 )
@@ -15,6 +17,8 @@ import (
 var endpoint = os.Getenv("MINIO_HOST_PORT")
 var accessKeyID = os.Getenv("MINIO_ACCESS_KEY")
 var secretAccessKey = os.Getenv("MINIO_ACCESS_SECRET")
+var region = os.Getenv("MINIO_REGION")
+var _, secure = os.LookupEnv("MINIO_SECURE")
 
 type minioChecker struct {
 	url            string
@@ -31,13 +35,19 @@ func (check *minioChecker) Execute() (details interface{}, err error) {
 	// prepare the request
 	l := utils.NewLogger()
 
-	client, err := minio.New(endpoint, accessKeyID, secretAccessKey, false)
+	opts := minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Region: region,
+		Secure: secure,
+	}
+
+	client, err := minio.New(endpoint, &opts)
 	if err != nil {
 		l.Error("Unable to create minio client", zap.Error(err))
 		return nil, err
 	}
 
-	_, err = client.ListBuckets()
+	_, err = client.ListBuckets(context.Background())
 	if err != nil {
 		err = fmt.Errorf("Minio checker returned error")
 		l.Error("Minio checker error", zap.Error(err))

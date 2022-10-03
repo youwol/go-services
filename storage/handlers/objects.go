@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	"github.com/minio/minio-go"
+	"github.com/minio/minio-go/v7"
 	zap "go.uber.org/zap"
 )
 
@@ -47,7 +47,12 @@ func GetObjectsHandler(params objects.GetObjectsParams, auth *models.Principal) 
 			resultsFilter = true
 		}
 
-		for obj := range client.ListObjectsV2(params.BucketName, search, recursive, doneChannel) {
+		listOptions := minio.ListObjectsOptions{
+			Prefix:    search,
+			Recursive: recursive,
+		}
+
+		for obj := range client.ListObjects(ctx, params.BucketName, listOptions) {
 			if obj.Err != nil {
 				logger.Error("Error retrieving one of the objects", zap.Error(obj.Err), zap.Any("object", obj))
 				continue
@@ -73,7 +78,7 @@ func GetObjectsHandler(params objects.GetObjectsParams, auth *models.Principal) 
 			// Currently the ListObjectsV2 returns empty metadata... Minio enh on it way
 			// Meanwhile, we need to fetch the meta explicitely on each object :'(
 			// PERF WARNING
-			meta, err := client.StatObject(params.BucketName, obj.Key, minio.StatObjectOptions{})
+			meta, err := client.StatObject(ctx, params.BucketName, obj.Key, minio.StatObjectOptions{})
 			if err == nil && IsAuthorized(ctx, &meta, auth) {
 				metaChannel <- models.ObjectInfo{
 					Etag:         meta.ETag,
@@ -106,7 +111,8 @@ func GetObjectsHandler(params objects.GetObjectsParams, auth *models.Principal) 
 }
 
 // DeleteObjects removes objects from a bucket
-func DeleteObjects(client *minio.Client, logger zap.Logger, params objects.DeleteObjectsParams, auth *models.Principal) error {
+func DeleteObjects(ctx context.Context, client *minio.Client, logger zap.Logger, params objects.DeleteObjectsParams,
+	auth *models.Principal) error {
 	var prefix = string("")
 	if params.Prefix != nil {
 		prefix = *params.Prefix
@@ -126,19 +132,19 @@ func DeleteObjects(client *minio.Client, logger zap.Logger, params objects.Delet
 	}
 
 	// Create a deleteChannel to store objects to delete
-	deleteChannel := make(chan string)
+	deleteChannel := make(chan minio.ObjectInfo)
 
 	// Send object names that are needed to be removed to objectsCh
 	go func() {
 		defer close(deleteChannel)
 
-		doneCh := make(chan struct{})
-
-		// Indicate to our routine to exit cleanly upon return.
-		defer close(doneCh)
+		listOptions := minio.ListObjectsOptions{
+			Prefix:    search,
+			Recursive: recursive,
+		}
 
 		// List all objects from a bucket-name with a matching prefix.
-		for object := range client.ListObjects(params.BucketName, search, recursive, doneCh) {
+		for object := range client.ListObjects(ctx, params.BucketName, listOptions) {
 			if object.Err != nil {
 				logger.Error("Error retrieving one of the objects", zap.Error(object.Err), zap.Any("object", object))
 			}
@@ -161,16 +167,16 @@ func DeleteObjects(client *minio.Client, logger zap.Logger, params objects.Delet
 				}
 			}
 
-			meta, err := client.StatObject(params.BucketName, object.Key, minio.StatObjectOptions{})
+			meta, err := client.StatObject(ctx, params.BucketName, object.Key, minio.StatObjectOptions{})
 			if err == nil && IsAuthorized(context.Background(), &meta, auth) {
-				deleteChannel <- object.Key
+				deleteChannel <- object
 			} else {
 				logger.Error("Error deleting one of the objects (unauthorized)", zap.Error(err), zap.Any("object", meta))
 			}
 		}
 	}()
 
-	errorCh := client.RemoveObjects(params.BucketName, deleteChannel)
+	errorCh := client.RemoveObjects(ctx, params.BucketName, deleteChannel, minio.RemoveObjectsOptions{})
 	var err error
 	for e := range errorCh {
 		logger.Error("Error deleting one of the objects", zap.Error(e.Err), zap.Any("object", e))
@@ -181,12 +187,12 @@ func DeleteObjects(client *minio.Client, logger zap.Logger, params objects.Delet
 
 // DeleteObjectsHandler implements the DELETE objects endpoint
 func DeleteObjectsHandler(params objects.DeleteObjectsParams, auth *models.Principal) middleware.Responder {
-	_, client, logger, err := GetHandlerContext(params.HTTPRequest)
+	ctx, client, logger, err := GetHandlerContext(params.HTTPRequest)
 	if err != nil {
 		return objects.NewDeleteObjectsInternalServerError().WithPayload(&models.APIResponse{Message: err.Error()})
 	}
 
-	err = DeleteObjects(client, logger, params, auth)
+	err = DeleteObjects(ctx, client, logger, params, auth)
 
 	if err != nil {
 		return objects.NewDeleteObjectsInternalServerError().WithPayload(&models.APIResponse{Message: err.Error()})

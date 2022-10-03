@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	minio "github.com/minio/minio-go"
+	minio "github.com/minio/minio-go/v7"
 	zap "go.uber.org/zap"
 )
 
@@ -21,7 +21,7 @@ func GetObjectInfoHandler(params objectinfo.GetObjectInfoParams, auth *models.Pr
 	options := minio.StatObjectOptions{}
 	objName := GetIsolatedObjName(params.ObjectName, params.Owner, auth, params.Isolation)
 
-	stats, err := client.StatObject(params.BucketName, objName, options)
+	stats, err := client.StatObject(ctx, params.BucketName, objName, options)
 	if err != nil {
 		logger.Error("Object not found", zap.Error(err), zap.Any("params", params))
 		return objectinfo.NewGetObjectInfoNotFound().WithPayload(&models.APIResponse{Message: err.Error()})

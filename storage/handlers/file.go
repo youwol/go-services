@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-openapi/runtime/middleware"
-	minio "github.com/minio/minio-go"
+	minio "github.com/minio/minio-go/v7"
 	zap "go.uber.org/zap"
 )
 
@@ -67,8 +67,8 @@ func AddFileHandler(params file.AddFileParams, auth *models.Principal) middlewar
 		objName = strings.TrimPrefix(objName, "/")
 	}
 
-	n, err := client.PutObjectWithContext(ctx, params.BucketName, objName, params.ObjectData, params.ObjectSize, options)
-	if err != nil || n != params.ObjectSize {
+	updateInfo, err := client.PutObject(ctx, params.BucketName, objName, params.ObjectData, params.ObjectSize, options)
+	if err != nil || updateInfo.Size != params.ObjectSize {
 		logger.Error("Error writing object to bucket", zap.Error(err))
 		return file.NewAddFileInternalServerError().WithPayload(&models.APIResponse{Message: err.Error()})
 	}

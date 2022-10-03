@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	minio "github.com/minio/minio-go"
+	minio "github.com/minio/minio-go/v7"
 	zap "go.uber.org/zap"
 )
 
@@ -71,14 +71,14 @@ func AddObjectHandler(params object.AddObjectParams, auth *models.Principal) mid
 
 	// If no isolation, we must make sure that we do not overwrite someone else's data
 	if params.Isolation != nil && *params.Isolation == false {
-		obj, err := client.StatObject(params.BucketName, objName, minio.StatObjectOptions{})
+		obj, err := client.StatObject(ctx, params.BucketName, objName, minio.StatObjectOptions{})
 		if err == nil && !IsAuthorized(ctx, &obj, auth) {
 			return object.NewAddObjectUnauthorized().WithPayload(&models.APIResponse{Message: "The object already exists and does not belong to you"})
 		}
 	}
 
 	rd := base64.NewDecoder(base64.StdEncoding, strings.NewReader(params.Data.Object.Data.String()))
-	_, err = client.PutObjectWithContext(ctx, params.BucketName, objName, rd, params.Data.Object.Size, options)
+	_, err = client.PutObject(ctx, params.BucketName, objName, rd, params.Data.Object.Size, options)
 	if err != nil {
 		logger.Error("Error writing object to bucket", zap.Error(err))
 		return object.NewAddObjectInternalServerError().WithPayload(&models.APIResponse{Message: err.Error()})
@@ -99,7 +99,7 @@ func GetObjectHandler(params object.GetObjectParams, auth *models.Principal) mid
 
 	objName := GetIsolatedObjName(params.ObjectName, params.Owner, auth, params.Isolation)
 
-	obj, err := client.GetObjectWithContext(ctx, params.BucketName, objName, options)
+	obj, err := client.GetObject(ctx, params.BucketName, objName, options)
 	if err != nil {
 		logger.Error("Could not retrieve the stored object", zap.Error(err), zap.Any("params", params))
 		return object.NewGetObjectInternalServerError().WithPayload(&models.APIResponse{Message: err.Error()})
@@ -141,7 +141,7 @@ func DeleteObjectHandler(params object.DeleteObjectParams, auth *models.Principa
 	// Authorize deletion
 	options := minio.StatObjectOptions{}
 	objName := GetIsolatedObjName(params.ObjectName, params.Owner, auth, params.Isolation)
-	stats, err := client.StatObject(params.BucketName, objName, options)
+	stats, err := client.StatObject(ctx, params.BucketName, objName, options)
 	if err != nil {
 		logger.Error("Could not delete the stored object", zap.Error(err), zap.Any("params", params))
 		return object.NewDeleteObjectNotFound().WithPayload(&models.APIResponse{Message: err.Error()})
@@ -151,7 +151,7 @@ func DeleteObjectHandler(params object.DeleteObjectParams, auth *models.Principa
 		return object.NewGetObjectUnauthorized().WithPayload(&models.APIResponse{Message: "Unauthorized"})
 	}
 
-	err = client.RemoveObject(params.BucketName, objName)
+	err = client.RemoveObject(ctx, params.BucketName, objName, minio.RemoveObjectOptions{})
 	if err != nil {
 		logger.Error("Could not delete the stored object", zap.Error(err), zap.Any("params", params))
 		return object.NewDeleteObjectNotFound().WithPayload(&models.APIResponse{Message: err.Error()})
