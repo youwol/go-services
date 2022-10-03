@@ -1,0 +1,30 @@
+# Config inherited from templates in:
+# - /.gitlab/golang.yml 
+# - /.gitlab/publish.yml 
+# - /.gitlab/deploy.yml 
+# - /.gitlab/post.yml 
+.go-libs: &go-libs
+  variables:
+    TARGET_NAME: go-libs
+    TARGET_PATH: libs/go-libs
+  rules:
+    - if: '$BUILD_TARGETS && $BUILD_TARGETS !~ /go-libs/'
+      when: never
+    - changes:
+      - libs/go-libs/**/*
+
+go-libs:build: # Dummy, a go lib cannot build
+  extends: .golang:build
+  rules:
+  - when: never
+
+go-libs:test:
+  extends:
+  - .go-libs
+  - .golang:test
+  needs: []
+
+go-libs:publish: # Dummy, a go lib cannot be published
+  extends: .docker:build
+  rules:
+  - when: never

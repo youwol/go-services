@@ -1,0 +1,659 @@
+swagger: "2.0"
+info:
+  description: ""
+  version: "0.0.4"
+  title: "Storage API"
+  termsOfService: ""
+  contact:
+    email: "yguyomar@youwol.com"
+  license:
+    name: "MIT"
+    url: "http://www.youwol.com"
+host: "storage"
+basePath: "/api/v0-alpha1"
+tags:
+- name: "bucket"
+  description: "Buckets provide isolation between object storage spaces"
+- name: "object"
+  description: "Objects can be stored and retrieved from buckets"
+- name: "objects"
+  description: "Requests that act on a group of objects"
+- name: "file"
+  description: "To be used from a browser application (uses local file system)"
+schemes:
+- "http"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+paths:
+  /bucket:
+    post:
+      security:
+        - Bearer: []
+      tags:
+      - "bucket"
+      summary: "Add a new bucket"
+      operationId: "addBucket"
+      parameters:
+      - in: "body"
+        name: "bucket"
+        description: "Description of the bucket to add"
+        required: true
+        schema:
+          $ref: "#/definitions/Bucket"
+      responses:
+        201:
+          description: "Created"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /buckets:
+    get:
+      security:
+        - Bearer: []
+      tags:
+      - "bucket"
+      summary: "Get the list of buckets"
+      operationId: "getBuckets"
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/BucketList"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /bucket/{bucketName}:
+    delete:
+      security:
+        - Bearer: []
+      tags:
+      - "bucket"
+      summary: "Delete an existing bucket"
+      operationId: "deleteBucket"
+      parameters:
+      - in: "path"
+        name: "bucketName"
+        description: "Name of the bucket to delete"
+        required: true
+        type: "string"
+      - in: "query"
+        name: "forceNotEmpty"
+        description: "Force deletion of the bucket even if not empty"
+        required: false
+        default: false
+        type: "boolean"
+      responses:
+        200:
+          description: "Delete complete"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /{bucketName}/file:
+    post:
+      security:
+        - Bearer: []
+      consumes:
+      - "multipart/form-data"
+      tags:
+      - "file"
+      summary: "Add a new object into a bucket"
+      operationId: "addFile"
+      parameters:
+      - in: "path"
+        name: "bucketName"
+        type: "string"
+        required: true
+      - in: "formData"
+        name: "objectName"
+        type: "string"
+        required: true
+      - in: "formData"
+        name: "objectData"
+        type: "file"
+        required: true
+        description: "The only way to send untransformed binary data with Swagger 2.0 is to use file type. We could switch to string/byte format but that requires the bytes to be Base64 encoded. We keep file for the moment, for performance purposes."
+      - in: "formData"
+        name: "objectSize"
+        type: "integer"
+        format: 'int64'
+        required: true  
+      - in: "formData"
+        name: "user_metadata"
+        type: "string"
+        description: "A (flat) map of string key/values"
+      - in: "formData"
+        name: "content_type"
+        type: "string"
+      - in: "formData"
+        name: "content_encoding"
+        type: "string"
+      - in: "formData"
+        name: "content_disposition"
+        type: "string"
+      - in: "formData"
+        name: "content_language"
+        type: "string"
+      - in: "formData"
+        name: "cache_control"
+        type: "string"
+      - in: "formData"
+        name: "num_threads"
+        type: "integer"
+      - in: "formData"
+        name: "server_side_encryption"
+        type: "string"
+        description: "TODO"
+      - in: "formData"
+        name: "storage_class"
+        type: "string"
+        enum: ["REDUCED_REDUNDANCY", "STANDARD"]
+        default: "STANDARD"
+      - in: "formData"
+        name: "website_redirect_location"
+        type: "string"
+        format: "uri"
+      - in: "formData"
+        name: "owner"
+        type: "string"
+        default: ""
+      - in: "formData"
+        name: "isolation"
+        type: "boolean"
+        description: "Should the server automatically isolate data between owners"
+        default: true
+      responses:
+        201:
+          description: "Created"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"  
+  /{bucketName}/object:
+    get:
+      security:
+        - Bearer: []
+      produces:
+      - "application/octet-stream"
+      tags:
+      - "object"
+      summary: "Retrieves an object from a bucket"
+      operationId: "getObject"
+      parameters:
+      - in: "path"
+        name: "bucketName"
+        type: "string"
+        required: true
+      - in: "query"
+        name: "objectName"
+        type: "string"
+        required: true
+      - in: "query"
+        name: "server_side_encryption"
+        description: "Optional encryption setting"
+        type: "string"
+      - in: "query"
+        name: "isolation"
+        description: "Should the server automatically isolate data between owners"
+        type: "boolean"
+        default: true
+      - in: "query"
+        name: "owner"
+        description: "Which owner does the object belong to ? Defaults to current user. Indicate a group path to act on a shared object"
+        type: "string"
+        default: ""
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            type: "string"
+            format: "byte"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+          
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    delete:
+      security:
+        - Bearer: []
+      tags:
+      - "object"
+      summary: "Delete an object from a bucket"
+      operationId: "deleteObject"
+      parameters:
+      - in: "path"
+        name: "bucketName"
+        type: "string"
+        required: true
+      - in: "query"
+        name: "objectName"
+        type: "string"
+        required: true
+      - in: "query"
+        name: "isolation"
+        description: "Should the server automatically isolate data between owners"
+        type: "boolean"
+        default: true
+      - in: "query"
+        name: "owner"
+        description: "Which owner does the object belong to ? Defaults to current user. Indicate a group path to act on a shared object"
+        type: "string"
+        default: ""
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    post:
+      security:
+        - Bearer: []
+      tags:
+      - "object"
+      summary: "Add a new object into a bucket"
+      operationId: "addObject"
+      parameters:
+      - in: "path"
+        name: "bucketName"
+        type: "string"
+        required: true
+      - in: "query"
+        name: "isolation"
+        description: "Should the server automatically isolate data between owners"
+        type: "boolean"
+        default: true
+      - in: "query"
+        name: "owner"
+        description: "Which owner does the document belong to ? Defaults to current user. Indicate a group path to act as a group (e.g.: /youwol-users/subgroup)"
+        type: "string"
+        default: ""
+      - in: "body"
+        name: "data"
+        schema:
+          $ref: '#/definitions/Object'
+        description: "data is a descriptor of the object to store (object data + options)"
+        required: true
+      responses:
+        201:
+          description: "Created"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /{bucketName}/objectinfo:
+    get:
+      security:
+        - Bearer: []
+      tags:
+      - "objectinfo"
+      summary: "Retrieves an object metadata from a bucket"
+      operationId: "getObjectInfo"
+      parameters:
+      - in: "path"
+        name: "bucketName"
+        type: "string"
+        required: true
+      - in: "query"
+        name: "objectName"
+        type: "string"
+        required: true
+      - in: "query"
+        name: "isolation"
+        description: "Should the server automatically isolate data between owners"
+        type: "boolean"
+        default: true
+      - in: "query"
+        name: "owner"
+        description: "Which owner does the object belong to ? Defaults to current user. Indicate a group path to act on a shared object"
+        type: "string"
+        default: ""
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ObjectInfo"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /{bucketName}/objects:
+    get:
+      security:
+        - Bearer: []
+      tags:
+      - "objects"
+      summary: "Retrieve a list of object information in a bucket"
+      operationId: "getObjects"
+      parameters:
+      - in: "path"
+        name: "bucketName"
+        type: "string"
+        required: true
+      - in: "query"
+        name: "prefix"
+        description: "Prefix of names to retrieve"
+        type: "string"
+      - in: "query"
+        name: "recursive"
+        description: "Whether to look in subfolders"
+        type: "boolean"
+      - in: "query"
+        name: "isolation"
+        description: "Should the server automatically isolate data between owners"
+        type: "boolean"
+        default: true
+      - in: "query"
+        name: "owner"
+        description: "Which owner does the object belong to ? Defaults to current user. Indicate a group path to act on a shared object"
+        type: "string"
+        default: ""
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ObjectInfoList"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"  
+    delete:
+      security:
+        - Bearer: []
+      tags:
+      - "objects"
+      summary: "Delete a list of objects in a bucket"
+      operationId: "deleteObjects"
+      parameters:
+      - in: "path"
+        name: "bucketName"
+        type: "string"
+        required: true
+      - in: "query"
+        name: "prefix"
+        description: "Prefix of names to retrieve"
+        type: "string"
+      - in: "query"
+        name: "recursive"
+        description: "Whether to look in subfolders"
+        type: "boolean"
+      - in: "query"
+        name: "isolation"
+        description: "Should the server automatically isolate data between owners"
+        type: "boolean"
+        default: true
+      - in: "query"
+        name: "owner"
+        description: "Which owner does the object belong to ? Defaults to current user. Indicate a group path to act on a shared object"
+        type: "string"
+        default: ""
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"  
+definitions:
+  ApiResponse:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      type:
+        type: "string"
+      message:
+        type: "string"
+  Bucket:
+    type: "object"
+    required:
+    - name
+    properties:
+      name:
+        type: "string"
+      region:
+        type: "string"
+      creation_date:
+        type: "string"
+        format: "date-time"
+  BucketList:
+    type: "array"
+    items:
+      $ref: "#/definitions/Bucket"
+  Object:
+    type: "object"
+    required:
+    - object
+    properties:
+      object:
+        $ref: "#/definitions/ObjectData"
+      options:
+        $ref: "#/definitions/ObjectOptions"
+  ObjectData:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      data:
+        type: "string"
+        format: "byte"
+        description: "base64 encoded file data"
+      size:
+        type: "integer"
+        format: "int64"
+  ObjectInfoList:
+    type: "array"
+    items:
+      $ref: "#/definitions/ObjectInfo"
+  ObjectInfo:
+    type: "object"
+    properties:
+      name: 
+        type: "string"
+      size:
+        type: "integer"
+        format: "int64"
+      etag:
+        type: "string"
+      last_modified:
+        type: "string"
+        format: "date-time"
+      metadata:
+        type: "object"
+      owner:
+        type: "object"
+        properties:
+          name:
+            type: "string"
+          id:
+            type: "string"
+      content_type:
+        type: "string"
+      storage_class:
+        type: "string"
+  ObjectOptions:
+    type: "object"
+    properties:
+      user_metadata:
+        type: "object"
+        description: "A (flat) map of string-only key/values"
+      content_type:
+        type: "string"
+      content_encoding:
+        type: "string"
+      content_disposition:
+        type: "string"
+      content_language:
+        type: "string"
+      cache_control:
+        type: "string"
+      num_threads:
+        type: "integer"
+      server_side_encryption:
+        type: "string"
+        description: "TODO"
+      storage_class:
+        type: "string"
+        enum: ["REDUCED_REDUNDANCY", "STANDARD"]
+        default: "STANDARD"
+      website_redirect_location:
+        type: "string"
+        format: "uri"
+  Principal:
+    type: "object"
+    required:
+    - sub
+    properties:
+      sub:
+        type: "string"
+      email_verified:
+        type: "boolean"
+      address:
+        type: "object"
+      preferred_username:
+        type: "string"
+      email:
+        type: "string"
+      member_of:
+        type: "array"
+        items:
+          $ref: "#/definitions/UserGroup"
+  UserGroup:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+      name:
+        type: "string"
+      path:
+        type: "string"
+  Owner:
+    type: "object"
+    required:
+    - name
+    properties:
+      name:
+        type: "string"
+        description: "group path"
+      id:
+        type: "string"
+        description: "for internal use only"
+      kind:
+        type: "string"
+        enum: ["user", "group"]
+        default: "user"
+        description: "for internal use only"

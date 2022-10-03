@@ -1,0 +1,99 @@
+# Default values for docdb.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: io.youwol.com/platform/docdb
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: latest
+
+imagePullSecrets:
+  - name: youwol-docker
+
+nameOverride: "docdb"
+fullnameOverride: "docdb"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+  annotations:
+    konghq.com/override: docdb
+
+ingress:
+  enabled: true
+  privateAPI: true # this api will be unavailable to users in prod (only to developers)
+  annotations:
+    kubernetes.io/ingress.class: kong
+    konghq.com/plugins: oidc-dev
+  hosts:
+    - host: dev.platform.youwol.com
+      pathType: Prefix
+      paths: ["/api/docdb/v0-alpha1"]
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 10m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false # TODO: use a request-per-second metric instead of the default CPU 
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+scylla:
+  hosts: scylla-0.scylla.infra.svc.cluster.local,scylla-1.scylla.infra.svc.cluster.local,scylla-2.scylla.infra.svc.cluster.local
+
+keycloak:
+  host: https://auth.youwol.com
+
+mappings:
+  enabled: false
+  targetHosts: {}
+    # insert here your mapping hosts
+    # key: "value"
+    # e.g. 
+    # dev: "dev.platform.youwol.com"
+    # OR
+    # by command line with the argument: helm install minio minio -n toto --values minio/values.yaml --set mappings.targetHosts.toto=toto.platform.youwol.com

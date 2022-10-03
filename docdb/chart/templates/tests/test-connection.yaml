@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "docdb.fullname" . }}-test-connection"
+  labels:
+    {{- include "docdb.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "docdb.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never

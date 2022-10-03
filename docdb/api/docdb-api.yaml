@@ -1,0 +1,1200 @@
+swagger: "2.0"
+info:
+  description: ""
+  version: "0.1.1"
+  title: "Docdb API"
+  termsOfService: ""
+  contact:
+    email: "yguyomar@youwol.com"
+  license:
+    name: "MIT"
+    url: "http://www.youwol.com"
+host: "docdb"
+basePath: "/api/v0-alpha1"
+tags:
+- name: "keyspace"
+  description: "Keyspace provides isolation between tables and contexts"
+- name: "table"
+  description: "Basic description of a storage structure"
+- name: "document"
+  description: "Generic item storage"
+- name: "query"
+  description: "Retrieve or delete a group of documents per criteria"
+schemes:
+- "http"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+paths:
+  /keyspace:
+    post:
+      security:
+        - Bearer: []
+      tags:
+      - "keyspace"
+      summary: "Add a new keyspace"
+      operationId: "addKeyspace"
+      parameters:
+      - in: "body"
+        name: "keyspace"
+        description: "Keyspace to be added"
+        required: true
+        schema:
+          $ref: "#/definitions/Keyspace"
+      responses:
+        201:
+          description: "Created"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    put:
+      security:
+        - Bearer: []
+      tags:
+      - "keyspace"
+      summary: "Updates a keyspace in the store (keyspace name cannot be updated)"
+      description: ""
+      operationId: "updateKeyspace"
+      parameters:
+      - name: "keyspace"
+        in: "body"
+        description: "Updated keyspace"
+        required: true
+        schema:
+          $ref: "#/definitions/Keyspace"
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /keyspace/{keyspaceName}:
+    get:
+      security:
+        - Bearer: []
+      tags:
+      - "keyspace"
+      summary: "Find a keyspace from name"
+      description: "Returns a single keyspace"
+      operationId: "getKeyspace"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace to return"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/Keyspace"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    delete:
+      security:
+        - Bearer: []
+      tags:
+      - "keyspace"
+      summary: "Deletes a keyspace"
+      description: ""
+      operationId: "deleteKeyspace"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /keyspaces:
+    get:
+      security:
+        - Bearer: []
+      tags:
+      - "keyspace"
+      summary: "Lists all keyspaces"
+      description: "Returns a list of keyspaces names"
+      operationId: "getKeyspaces"
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/KeyspaceList"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /{keyspaceName}/table:
+    post:
+      security:
+        - Bearer: []
+      tags:
+      - "table"
+      summary: "Add a new table (@see: https://docs.scylladb.com/getting-started/ddl/#create-table-statement)"
+      operationId: "addTable"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "table"
+        description: "table to be added"
+        required: true
+        schema:
+          $ref: "#/definitions/Table"
+      responses:
+        201:
+          description: "Created"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    put:
+      security:
+        - Bearer: []
+      tags:
+      - "table"
+      summary: "Updates a table in the store (table name cannot be updated)."
+      description: "Update the table by either adding or removing column, or changing options"
+      operationId: "updateTable"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace"
+        required: true
+        type: "string"
+      - name: "table_update"
+        in: "body"
+        description: "Table update"
+        required: true
+        schema:
+          $ref: "#/definitions/TableUpdate"
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /{keyspaceName}/table/{tableName}:
+    get:
+      security:
+        - Bearer: []
+      tags:
+      - "table"
+      summary: "Find a table from name"
+      description: "Returns a single table"
+      operationId: "getTable"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace to use"
+        required: true
+        type: "string"
+      - name: "tableName"
+        in: "path"
+        description: "Name of table to return"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/Table"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    delete:
+      security:
+        - Bearer: []
+      tags:
+      - "table"
+      summary: "Deletes a table"
+      description: ""
+      operationId: "deleteTable"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace"
+        required: true
+        type: "string"
+      - name: "tableName"
+        in: "path"
+        description: "Name of table to delete"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /{keyspaceName}/tables:
+    get:
+      security:
+        - Bearer: []
+      tags:
+      - "table"
+      summary: "Lists all tables in a keyspace"
+      description: "Returns the list of table names in the keyspace"
+      operationId: "getTables"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace to use"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/TableList"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /{keyspaceName}/{tableName}/index:
+    post:
+      security:
+        - Bearer: []
+      tags:
+      - "index"
+      summary: "Add a new table index (@see: https://docs.scylladb.com/getting-started/secondary_indexes)"
+      operationId: "addIndex"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        required: true
+        type: "string"
+      - name: "tableName"
+        in: "path"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "index"
+        description: "description of the index to create"
+        required: true
+        schema:
+          $ref: "#/definitions/Index"
+      responses:
+        201:
+          description: "Created"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    delete:
+      security:
+        - Bearer: []
+      tags:
+      - "index"
+      summary: "Delete a table index (@see: https://docs.scylladb.com/getting-started/secondary_indexes)"
+      operationId: "deleteIndex"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace"
+        required: true
+        type: "string"
+      - name: "tableName"
+        in: "path"
+        description: "Name of table"
+        required: true
+        type: "string"
+      - name: "indexName"
+        required: true
+        in: "query"
+        type: "string"
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /{keyspaceName}/{tableName}/document:
+    post:
+      security:
+        - Bearer: []
+      tags:
+      - "document"
+      summary: "Add a new document"
+      operationId: "addDocument"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace"
+        required: true
+        type: "string"
+      - name: "tableName"
+        in: "path"
+        description: "Name of table to delete"
+        required: true
+        type: "string"
+      - name: "document"
+        in: "body"
+        description: "Document to be added"
+        required: true
+        schema:
+          $ref: "#/definitions/Document"
+      - in: "query"
+        name: "owner"
+        description: "Which owner does the document belong to ? Defaults to current user. Indicate a group path to act as a group (e.g.: /youwol-users/subgroup)"
+        type: "string"
+        default: ""          
+      responses:
+        201:
+          description: "Created"
+          schema:
+            $ref: "#/definitions/EntityId"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    put:
+      security:
+        - Bearer: []
+      tags:
+      - "document"
+      summary: "Updates a document in the store"
+      description: ""
+      operationId: "updateDocument"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace to use"
+        required: true
+        type: "string"
+      - name: "tableName"
+        in: "path"
+        description: "Name of table to return"
+        required: true
+        type: "string"
+      - name: "document"
+        in: "body"
+        description: "Updated document"
+        required: true
+        schema:
+          $ref: "#/definitions/Document"
+      - in: "query"
+        name: "owner"
+        description: "Which owner does the document belong to ? Defaults to current user. Indicate a group path to act as a group (e.g.: /youwol-users/subgroup)"
+        type: "string"
+        default: ""
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    get:
+      security:
+        - Bearer: []
+      tags:
+      - "document"
+      summary: "Find a document from partition & clustering keys"
+      description: "Returns a single entity"
+      operationId: "getDocument"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace to use"
+        required: true
+        type: "string"
+      - name: "tableName"
+        in: "path"
+        description: "Name of table to return"
+        required: true
+        type: "string"
+      - name: "partitionKey"
+        in: "query"
+        description: "Primary key of entity to return"
+        required: true
+        type: "array"
+        items:
+          type: "string"
+      - name: "clusteringKey"
+        in: "query"
+        description: "Key of entity to return"
+        type: "array"
+        items:
+          type: "string"
+      - in: "query"
+        name: "owner"
+        description: "Which owner does the document belong to ? Defaults to current user. Indicate a group path to act as a group (e.g.: /youwol-users/subgroup)"
+        type: "string"
+        default: ""
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Document"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    delete:
+      security:
+        - Bearer: []
+      tags:
+      - "document"
+      summary: "Deletes document"
+      description: ""
+      operationId: "deleteDocument"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace to use"
+        required: true
+        type: "string"
+      - name: "tableName"
+        in: "path"
+        description: "Name of table to return"
+        required: true
+        type: "string"      
+      - name: "partitionKey"
+        in: "query"
+        description: "Primary key of the document to delete"
+        required: true
+        type: "array"
+        items:
+          type: "string"
+      - name: "clusteringKey"
+        in: "query"
+        description: "Key of the documeent to delete"
+        type: "array"
+        items:
+          type: "string"
+      - in: "query"
+        name: "owner"
+        description: "Which owner does the document belong to ? Defaults to current user. Indicate a group path to act as a group (e.g.: /youwol-users/subgroup)"
+        type: "string"
+        default: ""          
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+  /{keyspaceName}/{tableName}/query:
+    post:
+      security:
+        - Bearer: []
+      tags:
+      - "query"
+      summary: "Retrieves custom columns for a group of entities"
+      description: "Returns a list of enities or compact (array) data"
+      operationId: "selectQuery"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace to use"
+        required: true
+        type: "string"
+      - name: "tableName"
+        in: "path"
+        description: "Name of table to return"
+        required: true
+        type: "string"
+      - name: "select"
+        in: "body"
+        description: "Query to define the selection"
+        required: true
+        schema:
+          $ref: "#/definitions/SelectStatement"
+      - in: "query"
+        name: "owner"
+        description: "For which owner do we do the query ? Defaults to current user. Indicate a group path to act as a group (e.g.: /youwol-users/subgroup)"
+        type: "string"
+        default: ""
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/SelectResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+    delete:
+      security:
+        - Bearer: []
+      tags:
+      - "query"
+      summary: "Deletes a selection of entities"
+      description: ""
+      operationId: "deleteQuery"
+      parameters:
+      - name: "keyspaceName"
+        in: "path"
+        description: "Name of keyspace to use"
+        required: true
+        type: "string"
+      - name: "tableName"
+        in: "path"
+        description: "Name of table to return"
+        required: true
+        type: "string"      
+      - name: "delete"
+        in: "body"
+        description: "Query to select the entities that will be deleted"
+        required: true
+        schema:
+          $ref: "#/definitions/DeleteStatement"
+      - in: "query"
+        name: "owner"
+        description: "For which owner do we do the delete ? Defaults to current user. Indicate a group path to act as a group (e.g.: /youwol-users/subgroup)"
+        type: "string"
+        default: ""
+      responses:
+        200:
+          description: "Ok"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        401:
+          description: "Unauthorized"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        404:
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        500:
+          description: "Internal error"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+definitions:
+  ApiResponse:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      type:
+        type: "string"
+      message:
+        type: "string"
+  ClusteringOrder:
+    type: "array"
+    items:
+      $ref: "#/definitions/Order"
+  Column:
+    type: "object"
+    required:
+    - "name"
+    - "type"
+    properties:
+      name:
+        type: "string"
+      type:
+        type: "string"
+        description: "Available values:\nCql_types: ascii, bigint, blob, boolean, counter, date, decimal, double, duration, float, inet, int, smallint, text, time, timestamp, timeuuid, tinyint, uuid, varchar, varint\nCollections: MAP<cql_type,cql_type>, SET<cql_type>, LIST<cql_type>\nTuples: TUPLE <cql_type(,cql_type)*>"
+      static:
+        type: "boolean"
+        default: false
+      primary_key:
+        type: "boolean"
+        default: false
+  ColumnUpdate:
+    type: "object"
+    required:
+    - "name"
+    - "type"
+    properties:
+      name:
+        type: "string"
+      type:
+        type: "string"
+        description: "Available values:\nCql_types: ascii, bigint, blob, boolean, counter, date, decimal, double, duration, float, inet, int, smallint, text, time, timestamp, timeuuid, tinyint, uuid, varchar, varint\nCollections: MAP<cql_type,cql_type>, SET<cql_type>, LIST<cql_type>\nTuples: TUPLE <cql_type(,cql_type)*>"
+  CompactionOptions:
+    type: "object"
+    properties:
+      class:
+        type: "string"
+        enum: ["SizeTieredCompactionStrategy", "TimeWindowCompactionStrategy", "LeveledCompactionStrategy"]
+        default: "SizeTieredCompactionStrategy"
+      enabled:
+        type: "boolean"
+        default: true
+      tombstone_threshold:
+        type: "number"
+        default: 0.2
+      tombstone_compaction_interval:
+        type: "integer"
+        default: 86400
+      bucket_high:
+        type: "number"
+        description: "only for STCS, default 1.5"
+      bucket_low:
+        type: "number"
+        description: "only for STCS, default 0.5"
+      min_sstable_size:
+        type: "integer"
+        description: "only for STCS, default 50"
+      min_threshold: 
+        type: "integer"
+        description: "only for STCS & TWCS, default 4"
+      max_threshold : 
+        type: "integer"
+        description: "only for STCS & TWCS, default 32"
+      sstable_size_in_mb:
+        type: "integer"
+        description: "only for LCS, default 160"
+      compaction_window_unit: 
+        type: "string"
+        description: "only for TWCS, default DAYS"
+        enum: ["MINUTES", "HOURS", "DAYS"]
+      compaction_window_size:
+        type: "integer"
+        description: "only for TWCS, default 1"
+      split_during_flush:
+        type: "boolean"
+        description: "only for TWCS"
+  CompressionOptions:
+    type: "object"
+    properties:
+      sstable_compression:
+        type: "string"
+        default: "LZ4Compressor"
+      enabled:
+        type: "boolean"
+        default: true
+        description: "DO NOT USE: https://github.com/scylladb/scylla/issues/2501"
+      chunk_length_in_kb:
+        type: "integer"
+        default: 4
+  DeleteStatement:
+    type: "object"
+    description: "DELETE query description. @see: https://docs.scylladb.com/getting-started/dml/#delete-statement"
+    properties:
+      simple_selection:
+        type: "array"
+        items:
+          type: "string"
+      timestamp:
+        type: "string"
+        format: "date-time"
+      where_clause:
+        type: "array"
+        items:
+          $ref: "#/definitions/QueryRelation"
+      condition:
+        type: "array"
+        items:
+          $ref: "#/definitions/QueryRelation"
+  Document:
+    type: "object"
+  EntityId:
+    type: "object"
+    description: "The entity ID is the primary key of a document (combination of all primary columns values)"
+  Index:
+    type: "object"
+    description: "Decription of a table index entry"
+    properties:
+      name: 
+        type: "string"
+      identifier:
+        $ref: "#/definitions/IndexIdentifier"
+    required:
+      - name
+      - identifier
+  IndexIdentifier:
+    type: "object"
+    description: "Decription of a table index identifier. If using a partition key, this will refer to a local secondary index, else it will be a global secondary index"
+    properties:
+      column_name: 
+        type: "string"
+      partition_key: 
+        type: "string"
+      option:
+        type: "string"
+        enum: ["", "keys", "values", "entries", "full"]
+        default: ""
+    required:
+      - column_name
+  Keyspace:
+    type: "object"
+    required:
+    - "name"
+    - "replication"
+    properties:
+      name:
+        type: "string"
+      replication:
+        $ref: "#/definitions/Replication"
+      durable_writes:
+        type: "boolean"
+        default: true
+        description: "Whether to use the commit log for updates on this keyspace (disable this option at your own risk!)."
+  KeyspaceList:
+    type: "array"
+    items:
+      type: "string"
+  Order:
+    type: "object"
+    required:
+    - "name"
+    - "order"
+    properties:
+      name:
+        type: "string"
+      order:
+        type: "string"
+        enum: ["ASC", "DESC"]
+  Owner:
+    type: "object"
+    required:
+    - name
+    properties:
+      name:
+        type: "string"
+        description: "group path"
+      id:
+        type: "string"
+        description: "for internal use only"
+      kind:
+        type: "string"
+        enum: ["user", "group"]
+        default: "user"
+        description: "for internal use only"
+  Principal:
+    type: "object"
+    required:
+    - sub
+    properties:
+      sub:
+        type: "string"
+      email_verified:
+        type: "boolean"
+      address:
+        type: "object"
+      preferred_username:
+        type: "string"
+      email:
+        type: "string"
+      member_of:
+        type: "array"
+        items:
+          $ref: "#/definitions/UserGroup"
+  Query:
+    type: "object"
+    properties:
+      where_clause:
+        type: "array"
+        items:
+          $ref: "#/definitions/QueryRelation"
+      ordering_clause:
+        type: "array"
+        items:
+          $ref: "#/definitions/Order"
+  QueryRelation:
+    type: "object"
+    required:
+    - column
+    - relation
+    - term
+    properties:
+      column:
+        type: "string"
+      relation:
+        $ref: "#/definitions/RelationOperator"
+      term:
+        type: "object"
+  RelationOperator:
+    type: "string"
+    enum: ["eq", "lt", "leq", "gt", "geq", "in", "cnt", "cntKey", "like"]
+  Replication:
+    type: "object"
+    required: 
+    - "class"
+    properties:
+      class:
+        type: "string"
+        enum: ["SimpleStrategy", "NetworkTopologyStrategy"]
+        default: "SimpleStrategy"
+      replication_factor:
+        type: "integer"
+        default: 3
+  SelectClause:
+    type: "object"
+    properties:
+      selector:
+        type: "string"
+      identifier:
+        type: "string"
+  SelectResponse:
+    type: "object"
+    properties:
+      iterator:
+        type: "string"
+      columns:
+        type: "object"
+      documents:
+        type: "object"
+  SelectStatement:
+    type: "object"
+    description: "SELECT query description. @see: https://docs.scylladb.com/getting-started/dml/#select-statement"
+    required:
+    - max_results
+    properties:
+      allow_filtering:
+        type: "boolean"
+        default: false
+      max_results:
+        type: "integer"
+        minimum: 1
+        maximum: 1000
+        default: 100
+      iterator:
+        type: "string"
+      mode:
+        type: "string"
+        enum: ["documents", "columns"]
+        description: "Returns either a list of documents, or a list of arrays (one array per column)"
+        default: "documents"
+      distinct:
+        type: "array"
+        items:
+          type: "string"
+      select_clause:
+        type: "array"
+        items:
+          $ref: "#/definitions/SelectClause"
+      query:
+        $ref: "#/definitions/Query"
+  Table:
+    type: "object"
+    required:
+    - "name"
+    - "columns"
+    - "partition_key"
+    properties:
+      name:
+        type: "string"
+        example: "entities"
+      columns:
+        type: "array"
+        items:
+          $ref: "#/definitions/Column"
+      partition_key:
+        type: "array"
+        items:
+          type: "string"
+      clustering_columns:
+        type: "array"
+        items:
+          type: "string"
+      table_options:
+        $ref: "#/definitions/TableOptions"
+  TableList:
+    type: "array"
+    items:
+      type: "string"
+  TableOptions:
+    type: "object"
+    description: "@see https://docs.scylladb.com/getting-started/ddl/#create-table-statement"
+    properties:
+      clustering_order:
+        $ref: "#/definitions/ClusteringOrder"
+      comment:
+        type: "string"
+        default: ""
+      read_repair_chance:
+        type: "integer"
+        default: 0
+      dclocal_read_repair_chance:
+        type: "number"
+        default: 0.1
+      speculative_retry:
+        type: "string"
+        description: "@see https://docs.scylladb.com/getting-started/ddl/#speculative-retry-options"
+        default: "99PERCENTILE"
+      gc_grace_seconds:
+        type: "integer"
+        default: 864000
+      bloom_filter_fp_chance:
+        type: "number"
+        default: 0.00075
+      default_time_to_live:
+        type: "integer"
+        default: 0
+      compaction:
+        $ref: "#/definitions/CompactionOptions"
+      compression:
+        $ref: "#/definitions/CompressionOptions"
+      memtable_flush_period_in_ms:
+        type: "integer"
+        default: 0
+  TableUpdate:
+    type: "object"
+    required:
+    - "name"
+    properties:
+      name:
+        type: "string"
+        example: "entities"
+      add_columns:
+        type: "array"
+        items:
+          $ref: "#/definitions/ColumnUpdate"
+      drop_columns:
+        type: "array"
+        items:
+          type: "string"
+      table_options:
+        $ref: "#/definitions/TableOptions"
+    maxProperties: 2
+  UserGroup:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+      name:
+        type: "string"
+      path:
+        type: "string"
+
+  
