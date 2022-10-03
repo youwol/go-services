@@ -26,6 +26,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1
 )
 
-replace gitlab.com/youwol/platform/libs/go-libs => ../../libs/go-libs
+replace gitlab.com/youwol/platform/libs/go-libs => ../libs
 
 replace github.com/gocql/gocql => github.com/scylladb/gocql v1.4.3

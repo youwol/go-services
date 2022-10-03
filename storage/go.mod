@@ -20,6 +20,4 @@ require (
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
 )
 
-replace gitlab.com/youwol/platform/libs/go-libs => ../../libs/go-libs
-
-replace gitlab.com/youwol/go-libs => ../../libs/go-libs
+replace gitlab.com/youwol/platform/libs/go-libs => ../libs
