@@ -27,7 +27,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:0.2.13"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
@@ -38,25 +38,25 @@ spec:
               value: {{ .Values.config.environment.MINIO_HOST_PORT }}
             - name: MINIO_ACCESS_KEY
               valueFrom:
-                secretKeyRef:
-                  name: minio
-                  key: accesskey
+                configMapKeyRef:
+                  name: env-config
+                  key: minio_access_key
             - name: MINIO_ACCESS_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: minio
-                  key: secretkey
+                  name: minio-app-secret
+                  key: app-secret-key
             - name: KEYCLOAK_HOST
-              value: {{ .Values.keycloak.host  }}  
+              value: {{ .Values.keycloak.host  }}
             - name: KEYCLOAK_LOGIN
               valueFrom:
                 secretKeyRef:
-                  name: keycloak
-                  key: login
+                  name: keycloak-initial-admin
+                  key: username
             - name: KEYCLOAK_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: keycloak
+                  name: keycloak-initial-admin
                   key: password
             - name: REDIS_HOST_PORT
               value: redis-master.infra.svc.cluster.local:6379

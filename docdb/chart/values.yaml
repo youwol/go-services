@@ -5,13 +5,13 @@
 replicaCount: 1
 
 image:
-  repository: io.youwol.com/platform/docdb
+  repository: registry.gitlab.com/youwol/platform/docdb
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: latest
+#  tag: latest
 
 imagePullSecrets:
-  - name: youwol-docker
+  - name: gitlab-docker
 
 nameOverride: "docdb"
 fullnameOverride: "docdb"
@@ -45,19 +45,21 @@ service:
     konghq.com/override: docdb
 
 ingress:
-  enabled: true
+  enabled: false
   privateAPI: true # this api will be unavailable to users in prod (only to developers)
   annotations:
-    kubernetes.io/ingress.class: kong
-    konghq.com/plugins: oidc-dev
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: letsencrypt
+    konghq.com/https-redirect-status-code: "301"
+    konghq.com/protocols: https
   hosts:
-    - host: dev.platform.youwol.com
+    - host: platform.dev.youwol.com
       pathType: Prefix
-      paths: ["/api/docdb/v0-alpha1"]
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+      paths: [ "/api/docdb/v0-alpha1" ]
+  tls:
+    - secretName: platform-tls
+      hosts:
+        - platform.dev.youwol.com
 
 resources:
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -72,7 +74,7 @@ resources:
     memory: 128Mi
 
 autoscaling:
-  enabled: false # TODO: use a request-per-second metric instead of the default CPU 
+  enabled: false # TODO: use a request-per-second metric instead of the default CPU
   minReplicas: 2
   maxReplicas: 10
   targetCPUUtilizationPercentage: 50
@@ -83,17 +85,17 @@ tolerations: []
 affinity: {}
 
 scylla:
-  hosts: scylla-0.scylla.infra.svc.cluster.local,scylla-1.scylla.infra.svc.cluster.local,scylla-2.scylla.infra.svc.cluster.local
+  hosts: scylla-db-client.infra.svc.cluster.local
 
 keycloak:
-  host: https://auth.youwol.com
+  host: https://platform.dev.youwol.com
 
 mappings:
   enabled: false
   targetHosts: {}
     # insert here your mapping hosts
     # key: "value"
-    # e.g. 
+    # e.g.
     # dev: "dev.platform.youwol.com"
     # OR
     # by command line with the argument: helm install minio minio -n toto --values minio/values.yaml --set mappings.targetHosts.toto=toto.platform.youwol.com
