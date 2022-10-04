@@ -52,8 +52,8 @@ func configureFlags(api *operations.StorageAPI) {
 }
 
 func checkEnv(logger *zap.Logger) {
-	envs := []string{"MINIO_HOST_PORT", "MINIO_ACCESS_KEY", "MINIO_ACCESS_SECRET", "REDIS_HOST_PORT",
-		"KEYCLOAK_HOST", "KEYCLOAK_LOGIN", "KEYCLOAK_PASSWORD"}
+	envs := []string{"MINIO_HOST_PORT", "MINIO_ACCESS_KEY", "MINIO_ACCESS_SECRET",
+		"REDIS_HOST_PORT", "KEYCLOAK_HOST", "OPENID_CLIENT_ID", "OPENID_CLIENT_SECRET"}
 	for _, e := range envs {
 		if os.Getenv(e) == "" {
 			logger.Fatal("Environment variable not set", zap.String("Variable", e))

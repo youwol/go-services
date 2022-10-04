@@ -52,16 +52,16 @@ spec:
               value: {{ .Values.scylla.hosts }}
             - name: KEYCLOAK_HOST
               value: {{ .Values.keycloak.host  }}
-            - name: KEYCLOAK_LOGIN
+            - name: OPENID_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: env-config
+                  key: openid_client_id
+            - name: OPENID_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: keycloak-initial-admin
-                  key: username
-            - name: KEYCLOAK_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-initial-admin
-                  key: password
+                  name: openid-app-secret
+                  key: openid_client_secret
             - name: REDIS_HOST_PORT
               value: redis-master.infra.svc.cluster.local:6379
             - name: ENVIRONMENT

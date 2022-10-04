@@ -15,9 +15,9 @@ import (
 	"go.uber.org/zap"
 )
 
-var keycloakLogin = os.Getenv("KEYCLOAK_LOGIN")
-var keycloakPassword = os.Getenv("KEYCLOAK_PASSWORD")
 var keycloakHost = os.Getenv("KEYCLOAK_HOST")
+var keycloakClientId = os.Getenv("OPENID_CLIENT_ID")
+var keycloakClientSecret = os.Getenv("OPENID_CLIENT_SECRET")
 
 // NewAuthenticationMiddleware fetches user info from the bearer token
 // It has to be installed after the ContextLoggerMiddleware
@@ -60,7 +60,8 @@ func GetUserInfo(ctx context.Context, cacheName string, token string) map[string
 		logger := utils.ContextLogger(ctx)
 
 		client := gocloak.NewClient(keycloakHost)
-		JWT, err := client.LoginAdmin(keycloakLogin, keycloakPassword, "master")
+		//JWT, err := client.LoginAdmin(keycloakLogin, keycloakPassword, "master")
+		_, err := client.LoginClient(keycloakClientId, keycloakClientSecret, "youwol")
 		if err != nil {
 			logger.Error("Could not login into keycloak", zap.Error(err))
 			return nil
@@ -71,15 +72,21 @@ func GetUserInfo(ctx context.Context, cacheName string, token string) map[string
 			return nil
 		}
 		logger.Info("User info retrieved", zap.Any("UserInfo", *userinfo))
-		usergroups, err := client.GetUserGroups(JWT.AccessToken, "youwol", *userinfo.Sub)
-		if err != nil {
-			logger.Error("Could not retrieve current users groups", zap.Error(err))
-			return nil
-		}
+		//userGroups, err := client.GetUserGroups(JWT.AccessToken, "youwol", *userinfo.Sub)
+		//if err != nil {
+		//	logger.Error("Could not retrieve current users groups", zap.Error(err))
+		//	return nil
+		//}
 
-		// We use the access token as a key to store user info
+		groupID := "b289d90d-786e-49b9-a2d2-6ad76ab73ba5"
+		groupPath := "/youwol-users"
+
+		youwolUsersGroup := [1]*gocloak.Group{{
+			ID:   &groupID,
+			Path: &groupPath,
+		}} // We use the access token as a key to store user info
 		userMap = structs.Map(*userinfo)
-		userMap["MemberOf"] = usergroups
+		userMap["MemberOf"] = youwolUsersGroup
 
 		err = utils.SetCache(ctx, cacheName, token, userMap)
 		if err != nil {
@@ -104,7 +111,8 @@ func GetGroupByPath(ctx context.Context, cacheName string, groupPath string) *go
 		}
 
 		client := gocloak.NewClient(keycloakHost)
-		JWT, err := client.LoginAdmin(keycloakLogin, keycloakPassword, "master")
+		//JWT, err := client.LoginAdmin(keycloakLogin, keycloakPassword, "master")
+		JWT, err := client.LoginClient(keycloakClientId, keycloakClientSecret, "master")
 		if err != nil {
 			logger.Error("Could not login into keycloak", zap.Error(err))
 			return nil

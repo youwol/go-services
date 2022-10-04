@@ -52,7 +52,7 @@ func configureFlags(api *operations.DocdbAPI) {
 }
 
 func checkEnv(logger *zap.Logger) {
-	envs := []string{"SCYLLA_HOSTS", "KEYCLOAK_LOGIN", "KEYCLOAK_PASSWORD", "KEYCLOAK_HOST",
+	envs := []string{"SCYLLA_HOSTS", "OPENID_CLIENT_ID", "OPENID_CLIENT_SECRET", "KEYCLOAK_HOST",
 		"REDIS_HOST_PORT", "ENVIRONMENT"}
 	for _, e := range envs {
 		if os.Getenv(e) == "" {
